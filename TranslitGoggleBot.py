@@ -46,7 +46,7 @@ async def translate_and_speak(message: Message):
 
 async def text_to_speech(text):
     # Путь для сохранения аудиофайла
-    audio_file_path = 'tmp/audio_message.ogg'
+    audio_file_path = 'audio_message.ogg'
 
     # Генерация аудиофайла
     tts = gTTS(text=text, lang='de')
@@ -66,5 +66,5 @@ async def react_photo(message: Message):
 async def main():
     await dp.start_polling(bot)
 
-if __name__ == "__main__":  # Исправлено на __name__
+if __name__ == "__main__":
     asyncio.run(main())
