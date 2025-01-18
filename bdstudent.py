@@ -76,7 +76,7 @@ async def grade(message: Message, state:FSMContext):
         await message.answer(
             f"Данные по студенту сохранены в БД: имя - {student_data[1]}, возраст - {student_data[2]}, поток - {student_data[3]}")
     else:
-        await message.answer("Не удалось найти данные студента в базе данных.")
+        await message.answer("Не удалось найти данные студента в базе данных school_data.db.")
 
     conn.close()
 
