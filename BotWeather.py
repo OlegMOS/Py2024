@@ -3,7 +3,7 @@ import requests
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message
 from aiogram.filters import CommandStart, Command
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from config import TOKEN, ACCUWEATHER_API_KEY
 
@@ -12,7 +12,7 @@ dp = Dispatcher()
 
 # Храним время последнего сообщения
 last_message_time = None
-time_diff_all = None
+time_diff_all = timedelta(0)  # Инициализируем как timedelta
 
 # Функция для получения прогноза погоды
 async def get_weather(city="Chelyabinsk"):
@@ -42,9 +42,10 @@ async def help_command(message: Message):
 
 @dp.message(CommandStart())
 async def start_command(message: Message):
-    global last_message_time
+    global last_message_time, time_diff_all
     # Храним время последнего сообщения
     last_message_time = None
+    time_diff_all = timedelta(0)
 
     await message.answer(
         "Привет! Я бот, который показывает погоду!\nИспользуйте команду /weather для получения прогноза погоды.")
@@ -53,10 +54,9 @@ async def start_command(message: Message):
 async def weather_command(message: Message):
     global last_message_time, time_diff_all
     current_time = datetime.now()
-
     if last_message_time is not None:
         time_diff = current_time - last_message_time
-        time_diff_all = + time_diff
+        time_diff_all += time_diff  # Добавляем timedelta
 
         await message.answer(f"Прошло времени с последнего сообщения: {round(time_diff.total_seconds()/60)} минут(-а/ы).")
         await message.answer(f"Всего прошло времени с последнего start: {round(time_diff_all.total_seconds() / 60)} минут(-а/ы).")
@@ -68,5 +68,5 @@ async def weather_command(message: Message):
 async def main():
     await dp.start_polling(bot)
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # Исправлено имя переменной
     asyncio.run(main())
