@@ -12,6 +12,7 @@ dp = Dispatcher()
 
 # Храним время последнего сообщения
 last_message_time = None
+time_diff_all = None
 
 # Функция для получения прогноза погоды
 async def get_weather(city="Chelyabinsk"):
@@ -41,17 +42,24 @@ async def help_command(message: Message):
 
 @dp.message(CommandStart())
 async def start_command(message: Message):
+    global last_message_time
+    # Храним время последнего сообщения
+    last_message_time = None
+
     await message.answer(
         "Привет! Я бот, который показывает погоду!\nИспользуйте команду /weather для получения прогноза погоды.")
 
 @dp.message(Command('weather'))
 async def weather_command(message: Message):
-    global last_message_time
+    global last_message_time, time_diff_all
     current_time = datetime.now()
 
     if last_message_time is not None:
         time_diff = current_time - last_message_time
+        time_diff_all = + time_diff
+
         await message.answer(f"Прошло времени с последнего сообщения: {round(time_diff.total_seconds()/60)} минут(-а/ы).")
+        await message.answer(f"Всего прошло времени с последнего start: {round(time_diff_all.total_seconds() / 60)} минут(-а/ы).")
 
     last_message_time = current_time
     weather_info = await get_weather()
