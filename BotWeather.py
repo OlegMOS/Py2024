@@ -12,6 +12,7 @@ dp = Dispatcher()
 
 # Храним время последнего сообщения
 last_message_time = None
+n_time = 1
 time_diff_all = timedelta(0)  # Инициализируем как timedelta
 
 # Функция для получения прогноза погоды
@@ -42,9 +43,10 @@ async def help_command(message: Message):
 
 @dp.message(CommandStart())
 async def start_command(message: Message):
-    global last_message_time, time_diff_all
+    global last_message_time, time_diff_all, n_time
     # Храним время последнего сообщения
     last_message_time = None
+    n_time = 1
     time_diff_all = timedelta(0)
 
     await message.answer(
@@ -52,21 +54,31 @@ async def start_command(message: Message):
 
 @dp.message(Command('weather'))
 async def weather_command(message: Message):
-    global last_message_time, time_diff_all
+    global last_message_time, time_diff_all, n_time
     current_time = datetime.now()
+
     if last_message_time is not None:
-        time_diff = current_time - last_message_time
-        time_diff_all += time_diff  # Добавляем timedelta
+        if n_time % 2 == 0:
+            time_diff = current_time - last_message_time
+            time_diff_all += time_diff  # Добавляем timedelta
+            await message.answer(
+                f"Прошло времени с последнего сообщения: {round(time_diff.total_seconds() / 60)} минут(-а/ы).")
+            await message.answer(
+                f"Всего прошло времени с последнего start: {round(time_diff_all.total_seconds() / 60)} минут(-а/ы).")
+        else:
+            time_diff = 0
+            await message.answer("Таймер включен!")
+    else:
+        await message.answer("Таймер включен!")
 
-        await message.answer(f"Прошло времени с последнего сообщения: {round(time_diff.total_seconds()/60)} минут(-а/ы).")
-        await message.answer(f"Всего прошло времени с последнего start: {round(time_diff_all.total_seconds() / 60)} минут(-а/ы).")
-
+    n_time = n_time + 1
     last_message_time = current_time
+
     weather_info = await get_weather()
     await message.answer(weather_info)
 
 async def main():
     await dp.start_polling(bot)
 
-if __name__ == "__main__":  # Исправлено имя переменной
+if __name__ == "__main__":
     asyncio.run(main())
