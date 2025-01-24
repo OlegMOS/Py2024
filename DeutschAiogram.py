@@ -20,16 +20,16 @@ client = OpenAI(
 )
 
 # Настройка логирования
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+##logging.basicConfig(level=logging.INFO)
+##logger = logging.getLogger(__name__)
 
 # Инициализация бота с токеном
 bot = Bot(token=TOKENDu)  # Замените на ваш токен бота
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
-async def on_startup(dp):
-    logger.info("Бот запущен!")
+##async def on_startup(dp):
+##    logger.info("Бот запущен!")
 
 async def process_message(chat_id, user_input):
     # Создаем список сообщений
@@ -52,7 +52,7 @@ async def process_message(chat_id, user_input):
         tts.save(audio_file_name)
 
         # Отправка аудиофайла пользователю
-        await bot.send_audio(chat_id, types.InputFile(audio_file_name))
+        await bot.send_audio(chat_id, types.FSInputFile(audio_file_name))
 
         # Удаление аудиофайла после отправки
         os.remove(audio_file_name)
@@ -111,7 +111,7 @@ async def handle_voice_message(message: types.Message):
             await bot.send_message(chat_id, f'Произошла ошибка: {str(e)}')
 
 async def main():
-    await on_startup(dp)
+    ##await on_startup(dp)
     await dp.start_polling(bot)
 
 if __name__ == '__main__':

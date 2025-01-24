@@ -67,9 +67,9 @@ async def weather_command(message: Message):
                 f"Всего прошло времени с последнего start: {round(time_diff_all.total_seconds() / 60)} минут(-а/ы).")
         else:
             time_diff = 0
-            await message.answer("Таймер включен!")
+            await message.answer("Таймер включен (120+60)!")
     else:
-        await message.answer("Таймер включен!")
+        await message.answer("Таймер включен (120+60)!")
 
     n_time = n_time + 1
     last_message_time = current_time
