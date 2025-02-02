@@ -15,25 +15,31 @@ last_message_time = None
 n_time = 1
 time_diff_all = timedelta(0)  # Инициализируем как timedelta
 
-# Функция для получения прогноза погоды
+
 async def get_weather(city="Chelyabinsk"):
     # Получаем ключ для города
     location_url = f"http://dataservice.accuweather.com/locations/v1/cities/search?apikey={ACCUWEATHER_API_KEY}&q={city}"
     response = requests.get(location_url)
-    location_data = response.json()
 
-    if location_data and isinstance(location_data, list) and len(location_data) > 0:
-        location_key = location_data[0]['Key']
+    if response.status_code == 200:
+        location_data = response.json()
 
-        # Получаем прогноз погоды
-        weather_url = f"http://dataservice.accuweather.com/currentconditions/v1/{location_key}?apikey={ACCUWEATHER_API_KEY}&language=ru"
-        weather_response = requests.get(weather_url)
-        weather_data = weather_response.json()
+        if location_data and isinstance(location_data, list) and len(location_data) > 0:
+            location_key = location_data[0]['Key']
 
-        if weather_data and isinstance(weather_data, list) and len(weather_data) > 0:
-            weather = weather_data[0]
-            return f"Температура: {weather['Temperature']['Metric']['Value']}°C\n" \
-                   f"Состояние: {weather['WeatherText']}"
+            # Получаем прогноз погоды
+            weather_url = f"http://dataservice.accuweather.com/currentconditions/v1/{location_key}?apikey={ACCUWEATHER_API_KEY}&language=ru"
+            weather_response = requests.get(weather_url)
+
+            if weather_response.status_code == 200:
+                weather_data = weather_response.json()
+
+                if weather_data and isinstance(weather_data, list) and len(weather_data) > 0:
+                    weather = weather_data[0]
+                    return f"Температура: {weather['Temperature']['Metric']['Value']}°C\n" \
+                           f"Состояние: {weather['WeatherText']}"
+            elif weather_response.status_code == 404:
+                return None  # Возвращаем None для статуса 404
 
     return "Не удалось получить данные о погоде."
 
@@ -67,9 +73,9 @@ async def weather_command(message: Message):
                 f"Всего прошло времени с последнего start: {round(time_diff_all.total_seconds() / 60)} минут(-а/ы).")
         else:
             time_diff = 0
-            await message.answer("Таймер включен (120+60)!")
+            await message.answer("Таймер включен (105+60)!")
     else:
-        await message.answer("Таймер включен (120+60)!")
+        await message.answer("Таймер включен (105+60)!")
 
     n_time = n_time + 1
     last_message_time = current_time
