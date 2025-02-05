@@ -1,3 +1,7 @@
+from collections import deque
+import time
+import random
+
 def is_balanced(expression):
     stack = []
     brackets = {')': '(', '}': '{', ']': '['}
@@ -16,10 +20,6 @@ expression = "{[()()]}"
 print(is_balanced(expression))  # Вывод: True
 expression = "{[(()]}"
 print(is_balanced(expression))  # Вывод: False
-
-from collections import deque
-import time
-import random
 
 def worker(task_queue):
     while task_queue:
