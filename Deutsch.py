@@ -8,7 +8,16 @@ import requests
 import io
 from pydub import AudioSegment
 import speech_recognition as sr
+import certifi  # Импортируем certifi
+from telebot import apihelper  # Для настройки сессии telebot
 
+# Настройка SSL-верификации для ВСЕХ запросов
+ssl_ca_path = certifi.where()
+requests_session = requests.Session()
+requests_session.verify = ssl_ca_path
+
+# Настройка telebot на использование безопасной сессии
+apihelper.SESSION = requests_session  # Применяем ко всем запросам telebot
 
 # Инициализация клиента OpenAI
 client = OpenAI(
@@ -34,7 +43,7 @@ def handle_voice_message(message):
         voice_url = f'https://api.telegram.org/file/bot{bot.token}/{voice_file.file_path}'
 
         # Загружаем файл и сохраняем его
-        voice_response = requests.get(voice_url)
+        voice_response = requests_session.get(voice_url)
         audio_file = io.BytesIO(voice_response.content)
 
         # Конвертация аудиофайла в формат, который можно распознать
@@ -101,7 +110,7 @@ def process_message(chat_id, user_input):
         }
 
         # Отправка POST-запроса
-        response = requests.post(url, data=payload)
+        response = requests_session.post(url, data=payload)
 
     except requests.exceptions.ConnectionError:
         bot.send_message(chat_id, 'Ошибка сети. Пожалуйста, проверьте подключение к интернету.')

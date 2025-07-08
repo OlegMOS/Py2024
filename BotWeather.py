@@ -1,5 +1,9 @@
 import asyncio
 import requests
+import aiohttp
+import certifi
+import ssl
+import os
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message
 from aiogram.filters import CommandStart, Command
@@ -7,16 +11,16 @@ from datetime import datetime, timedelta
 
 from config import TOKEN, ACCUWEATHER_API_KEY
 
-bot = Bot(token=TOKEN)
-dp = Dispatcher()
-
 # Храним время последнего сообщения
 last_message_time = None
 n_time = 1
 time_diff_all = timedelta(0)  # Инициализируем как timedelta
 
+# Создаем Dispatcher здесь, перед использованием декораторов
+dp = Dispatcher()
 
-async def get_weather(city="Chelyabinsk"):
+
+def get_weather(city="Chelyabinsk"):
     # Получаем ключ для города
     location_url = f"http://dataservice.accuweather.com/locations/v1/cities/search?apikey={ACCUWEATHER_API_KEY}&q={city}"
     response = requests.get(location_url)
@@ -43,9 +47,12 @@ async def get_weather(city="Chelyabinsk"):
 
     return "Не удалось получить данные о погоде."
 
+
 @dp.message(Command('help'))
 async def help_command(message: Message):
-    await message.answer("Этот бот умеет выполнять команды:\n/start - Запуск бота\n/help - Помощь\n/weather - Узнать погоду в Челябинске")
+    await message.answer(
+        "Этот бот умеет выполнять команды:\n/start - Запуск бота\n/help - Помощь\n/weather - Узнать погоду в Челябинске")
+
 
 @dp.message(CommandStart())
 async def start_command(message: Message):
@@ -57,6 +64,7 @@ async def start_command(message: Message):
 
     await message.answer(
         "Привет! Я бот, который показывает погоду!\nИспользуйте команду /weather для получения прогноза погоды.")
+
 
 @dp.message(Command('weather'))
 async def weather_command(message: Message):
@@ -80,11 +88,49 @@ async def weather_command(message: Message):
     n_time = n_time + 1
     last_message_time = current_time
 
-    weather_info = await get_weather()
+    weather_info = get_weather()
     await message.answer(weather_info)
 
+
+async def create_bot():
+    # Настройка SSL для Telegram
+    ssl_ca_path = certifi.where()
+    telegram_ssl_context = ssl.create_default_context(cafile=ssl_ca_path)
+
+    # Создаем безопасный коннектор для Telegram
+    telegram_connector = aiohttp.TCPConnector(ssl=telegram_ssl_context)
+
+    # Инициализируем бота с безопасным коннектором
+    bot = Bot(token=TOKEN, connector=telegram_connector)
+    return bot, telegram_connector
+
+
 async def main():
-    await dp.start_polling(bot)
+    # Создаем бота с безопасным коннектором
+    bot, connector = await create_bot()
+
+    try:
+        print("Бот погоды запущен!")
+        print(f"Используемые SSL сертификаты: {certifi.where()}")
+        await dp.start_polling(bot)
+    except Exception as e:
+        print(f"Ошибка: {e}")
+    finally:
+        await connector.close()
+
 
 if __name__ == "__main__":
+    # Проверка подключения к Telegram с SSL
+    try:
+        ssl_ca_path = certifi.where()
+        telegram_session = requests.Session()
+        telegram_session.verify = ssl_ca_path
+        test_resp = telegram_session.get("https://api.telegram.org", timeout=10)
+        print(f"Тест подключения к Telegram: {'Успешно' if test_resp.ok else 'Ошибка'} - код {test_resp.status_code}")
+    except Exception as e:
+        print(f"Ошибка теста подключения к Telegram: {str(e)}")
+
+    if os.name == 'nt':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
     asyncio.run(main())
